@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<link rel="stylesheet" href="images/bootstrap.css" />
+	<script src="images/vue.js" type="text/javascript" charset="utf-8"></script>
+	<style>
+		img{width:40px;height:40px}
+		.num{
+			width:20px;
+			text-align: center;
+		}
+	</style>
+	<body>
+		<div id="shopcart">
+			<div class="panel panel-success" style='margin:20px;'>
+				<!-- head-->
+				<div class='panel-heading'>
+					<h1>购物车</h1>
+				</div>
+				<div class="panel-body">
+					<div class="input-group">
+						<span class='input-group-btn'>
+							<a class="btn btn-success">名称搜索</a>
+						</span>
+						<input type="text" class="form-control" placeholder="请输入查询内容" v-model='input'/>
+					</div>
+				</div>
+				
+				
+				<!-- content -->
+				<div class='panel-body'>
+					<table class='table table-condensed'>
+						<thead>
+							<tr>
+								<th><input type="checkbox"  v-model="checkedAll" @change="checkAllHandle"/>全选</th>
+								<th>图片</th>
+								<th>商品名称</th>
+								<th>商品数量</th>
+								<th>商品单价(元)</th>
+								<th>商品金额(元)</th>
+								<th>操作</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for='(item,i) in searchData' :key='i'>
+								<td><input type="checkbox" @change="checkState(i)" :checked="item.checked"/></td>
+								<td><img v-bind:src="item.url"/></td>
+								<td>{{item.name}}</td>
+								<td>
+									<button @click="item.count-=1" v-bind:disabled="item.count==0">-</button>
+									<input type="text" v-bind:value='item.count' class='num'/>
+									<button @click="item.count+=1">+</button>
+								</td>
+								<td>{{item.price | fuck}}</td>
+								<td>{{item.price*item.count | fuck}}</td>
+								<td>
+									<button type='button' class='btn btn-success btn-sm' @click='deletes(i)'>删除</button>
+								</td>
+							</tr>
+							<tr style='text-align: center;'>
+								<td colspan="4">{{totalCount}}件商品总计(不含运费)：￥{{totalPrice | fuck}}</td>
+								<td><a href="" class='buy'>去结算</a></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+<script type="text/javascript">
+	window.onload = function(){
+		new Vue({
+			el:'#shopcart',
+			data:{
+				input:'',
+				items:[
+					{name:'橘子',price:'9.9',count:1,url:'images/2.jpg',checked:true},
+					{name:'西瓜',price:'5',count:1,url:'images/4.jpg',checked:true},
+					{name:'梨子',price:'16',count:1,url:'images/5.jpg',checked:true},
+					{name:'桃子',price:'15',count:1,url:'images/10.jpg',checked:true},
+					{name:'柚子',price:'6.6',count:1,url:'images/6.jpg',checked:true},
+					{name:'猕猴桃',price:'21',count:1,url:'images/10.jpg',checked:true},
+					{name:'芒果',price:'11',count:2,url:'images/9.jpg',checked:true},
+				],
+				checkedAll:true,
+			},
+			methods:{
+				//删除商品
+				deletes:function(index){
+					var question = confirm('确定删除选中的商品吗?');
+					if(question === true){
+						setTimeout(() => {
+							this.items.splice(index,1);
+							alert('删除成功！')
+						},500)
+					}
+				},
+				//全选 单选
+				checkAllHandle:function() {
+                    this.items.foreach((item, i) => {
+                        this.items[i].checked = this.checkedAll;
+                    })
+               	},
+               	checkState:function(i) {
+                    this.items[i].checked = !this.items[i].checked;
+                    let selecteditem = this.items.filter(function (item) {
+                        return item.checked;
+                    });
+                    // 判断一下选中的数据的长度是否等于总数据的长度
+                    if (selecteditem.length === this.items.length) {
+                        this.checkedAll = true;
+                    } else {
+                        this.checkedAll = false;
+                    }
+                },
+                checkAllHandle() {
+                    this.items.forEach((item, i) => {
+                        this.items[i].checked = this.checkedAll;
+                    });
+                },
+			},
+			computed:{//计算属性
+				//计算所选的商品总件
+				totalCount:function(index){
+					return this.searchData.reduce(function(total,curr){
+						return total+curr.count;
+					},0)
+				},
+				//查询商品
+				searchData:function(){
+					if(!this.input) return this.items;
+					return this.items.filter(item => {
+						return item.name.includes(this.input);
+					})
+//					if(!this.input) return this.items;
+//					return this.items.fifter(item => {
+//						return item.name.indexOf(this.input)!= -1;
+//					})
+				},
+				//计算总价
+				totalPrice:function(){
+					return this.searchData.reduce(function(total,curr){
+						return total+curr.count*curr.price;//返回原有价格加上当前的数量*当前的单价
+					},0)
+				},
+			},
+			filters:{//过滤器
+				fuck:function(item){
+					return (parseFloat(item).toFixed(2))//取两位小数点
+				}
+			},
+		})
+	}
+</script>
